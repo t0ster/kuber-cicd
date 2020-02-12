@@ -1,0 +1,10 @@
+multibranchPipelineJob('kuber') {
+    branchSources {
+        github {
+            id('kuber')
+            scanCredentialsId('github-username-access-token')
+            repoOwner('t0ster')
+            repository('kuber')
+        }
+    }
+}
