@@ -1,3 +1,7 @@
+def containerExists(image) {
+  return sh(returnStatus: true, script: "docker manifest inspect ${image} > /dev/null") == 0
+}
+
 def cicd(build) {
   def buildNumber = env.BUILD_NUMBER as int
   if (buildNumber > 1) milestone(buildNumber - 1)
@@ -26,10 +30,6 @@ def cicd(build) {
       "tag": branch
     ],
   ]
-
-  def containerExists(image) {
-    return sh(returnStatus: true, script: "docker manifest inspect ${image} > /dev/null") == 0
-  }
 
   podTemplate(
           containers: [
