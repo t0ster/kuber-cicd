@@ -102,6 +102,7 @@ def cicd(build) {
           stage('Functional Test') {
             def image = containers['selenium']['image']
             def tag = containers['selenium']['tag']
+            // def label = "build-jenkins-operator-${UUID.randomUUID().toString()}"
             podTemplate(
                     containers: [
                             containerTemplate(name: 'jnlp', image: 'jenkins/jnlp-slave'),
@@ -113,16 +114,18 @@ def cicd(build) {
                     ],
                     serviceAccount: 'jenkins-operator-jenkins'
             ) {
-              container('selenium') {
-                  try {
-                      sh 'pytest /app --verbose --junit-xml reports/tests.xml'
-                  } finally {
-                      junit testResults: 'reports/tests.xml'
-                      echo "http://zalenium.35.246.75.225.nip.io/dashboard/?q=build:kuber-${build}-${branch}-${BUILD_ID}"
-                  }
+              node(POD_LABEL) {
+                container('selenium') {
+                    try {
+                        sh 'pytest /app --verbose --junit-xml reports/tests.xml'
+                    } finally {
+                        junit testResults: 'reports/tests.xml'
+                        echo "http://zalenium.35.246.75.225.nip.io/dashboard/?q=build:kuber-${build}-${branch}-${BUILD_ID}"
+                    }
+                }
               }
             }
-          }
-      }
+        }
+    }
   }
 }
