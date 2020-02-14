@@ -42,8 +42,7 @@ def cicd(build) {
                 envVar(key: 'DOCKER_HOST', value: 'tcp://dind:2375'),
                 envVar(key: 'DOCKER_CLI_EXPERIMENTAL', value: 'enabled')
             ])
-    ],
-    serviceAccount: 'jenkins-operator-jenkins'
+    ]
   ) {
       node(POD_LABEL) {
           stage('Build') {
@@ -113,8 +112,7 @@ def cicd(build) {
                                 envVar(key: 'BASE_URL', value: "http://${branch}.kuber.35.246.75.225.nip.io"),
                                 envVar(key: 'BUILD', value: "kuber-${build}-${branch}-${BUILD_ID}"),
                             ])
-                    ],
-                    serviceAccount: 'jenkins-operator-jenkins'
+                    ]
             ) {
               node(POD_LABEL) {
                 container('selenium') {
