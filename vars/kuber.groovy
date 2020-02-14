@@ -3,7 +3,7 @@ def containerExists(image) {
 }
 
 def branchExists(repo, branch) {
-  return sh(returnStatus: true, script: "git ls-remote --exit-code --heads git@github.com:t0ster/${repo}.git ${branch}") == 0
+  return sh(returnStatus: true, script: "git ls-remote --exit-code --heads https://github.com/t0ster/${repo}.git ${branch}") == 0
 }
 
 def cicd(build) {
