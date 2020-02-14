@@ -101,31 +101,32 @@ def cicd(build) {
               def jsonObj = readJSON text: response.content
               echo jsonObj['result']
           }
-          stage('Functional Test') {
-            def image = containers['selenium']['image']
-            def tag = containers['selenium']['tag']
-            podTemplate(
-                    containers: [
-                            containerTemplate(name: 'jnlp', image: 'jenkins/jnlp-slave'),
-                            containerTemplate(name: 'selenium', alwaysPullImage: true, image: "${image}:${tag}", command: 'cat', ttyEnabled: true, envVars: [
-                                envVar(key: 'SELENIUM_HOST', value: 'zalenium'),
-                                envVar(key: 'BASE_URL', value: "http://${branch}.kuber.35.246.75.225.nip.io"),
-                                envVar(key: 'BUILD', value: "kuber-${build}-${branch}-${BUILD_ID}"),
-                            ])
-                    ]
-            ) {
-              node(POD_LABEL) {
-                container('selenium') {
-                    try {
-                        sh 'pytest /app --verbose --junit-xml reports/tests.xml'
-                    } finally {
-                        junit testResults: 'reports/tests.xml'
-                        echo "http://zalenium.35.246.75.225.nip.io/dashboard/?q=build:kuber-${build}-${branch}-${BUILD_ID}"
-                    }
-                }
-              }
+    }
+  }
+
+  stage('Functional Test') {
+    def image = containers['selenium']['image']
+    def tag = containers['selenium']['tag']
+    podTemplate(
+            containers: [
+                    containerTemplate(name: 'jnlp', image: 'jenkins/jnlp-slave'),
+                    containerTemplate(name: 'selenium', alwaysPullImage: true, image: "${image}:${tag}", command: 'cat', ttyEnabled: true, envVars: [
+                        envVar(key: 'SELENIUM_HOST', value: 'zalenium'),
+                        envVar(key: 'BASE_URL', value: "http://${branch}.kuber.35.246.75.225.nip.io"),
+                        envVar(key: 'BUILD', value: "kuber-${build}-${branch}-${BUILD_ID}"),
+                    ])
+            ]
+    ) {
+      node(POD_LABEL) {
+        container('selenium') {
+            try {
+                sh 'pytest /app --verbose --junit-xml reports/tests.xml'
+            } finally {
+                junit testResults: 'reports/tests.xml'
+                echo "http://zalenium.35.246.75.225.nip.io/dashboard/?q=build:kuber-${build}-${branch}-${BUILD_ID}"
             }
         }
+      }
     }
   }
 }
