@@ -90,6 +90,7 @@ def cicd(build) {
                                   "pullPolicy": "Always",
                                   "release": "kuber-${build}-${branch}-${BUILD_ID}"
 
+                              }
                           }
                       }
                   }
