@@ -68,11 +68,13 @@ def cicd(build) {
               }
           }
           stage('Deploy') {
+              def kuberBranch = branchExists('kuber', branch) ? branch : 'master'
               def namespace = (branch == 'master') ? 'stg' : branch
               def patchOrg = """
                   {
                       "release": "kuber-${branch}",
                       "repo": "https://github.com/t0ster/kuber.git",
+                      "branch" : "${kuberBranch}",
                       "path": "charts/kuber-stack",
                       "namespace": "${namespace}",
                       "values": {
