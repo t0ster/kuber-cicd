@@ -2,6 +2,10 @@ def containerExists(image) {
   return sh(returnStatus: true, script: "docker manifest inspect ${image} > /dev/null") == 0
 }
 
+def branchExists(repo, branch) {
+  return sh(returnStatus: true, script: "git ls-remote --exit-code --heads git@github.com:t0ster/${repo}.git ${branch} &> /dev/null") == 0
+}
+
 def cicd(build) {
   def buildNumber = env.BUILD_NUMBER as int
   if (buildNumber > 1) milestone(buildNumber - 1)
@@ -32,19 +36,14 @@ def cicd(build) {
   ]
 
   podTemplate(
-          containers: [
-                  containerTemplate(name: 'jnlp', image: 'jenkins/jnlp-slave'),
-                  containerTemplate(name: 'builder', image: 't0ster/build-deploy:0.0.2', command: 'cat', ttyEnabled: true, envVars: [
-                      envVar(key: 'DOCKER_HOST', value: 'tcp://dind:2375'),
-                      envVar(key: 'DOCKER_CLI_EXPERIMENTAL', value: 'enabled')
-                  ]),
-                  containerTemplate(name: 'selenium', alwaysPullImage: true, image: "t0ster/kuber-selenium:master", command: 'cat', ttyEnabled: true, envVars: [
-                      envVar(key: 'SELENIUM_HOST', value: 'zalenium'),
-                      envVar(key: 'BASE_URL', value: "http://${branch}.kuber.35.246.75.225.nip.io"),
-                      envVar(key: 'BUILD', value: "kuber-${build}-${branch}-${BUILD_ID}"),
-                  ])
-          ],
-          serviceAccount: 'jenkins-operator-jenkins'
+    containers: [
+            containerTemplate(name: 'jnlp', image: 'jenkins/jnlp-slave'),
+            containerTemplate(name: 'builder', image: 't0ster/build-deploy:0.0.2', command: 'cat', ttyEnabled: true, envVars: [
+                envVar(key: 'DOCKER_HOST', value: 'tcp://dind:2375'),
+                envVar(key: 'DOCKER_CLI_EXPERIMENTAL', value: 'enabled')
+            ])
+    ],
+    serviceAccount: 'jenkins-operator-jenkins'
   ) {
       node(POD_LABEL) {
           stage('Build') {
@@ -90,7 +89,7 @@ def cicd(build) {
                                   "tag": "${containers['functions']['tag']}",
                                   "pullPolicy": "Always",
                                   "release": "kuber-${build}-${branch}-${BUILD_ID}"
-                              }
+
                           }
                       }
                   }
@@ -101,6 +100,19 @@ def cicd(build) {
               echo jsonObj['result']
           }
           stage('Functional Test') {
+            def image = containers['selenium']['image']
+            def tag = containers['selenium']['tag']
+            podTemplate(
+                    containers: [
+                            containerTemplate(name: 'jnlp', image: 'jenkins/jnlp-slave'),
+                            containerTemplate(name: 'selenium', alwaysPullImage: true, image: "${image}:${tag}", command: 'cat', ttyEnabled: true, envVars: [
+                                envVar(key: 'SELENIUM_HOST', value: 'zalenium'),
+                                envVar(key: 'BASE_URL', value: "http://${branch}.kuber.35.246.75.225.nip.io"),
+                                envVar(key: 'BUILD', value: "kuber-${build}-${branch}-${BUILD_ID}"),
+                            ])
+                    ],
+                    serviceAccount: 'jenkins-operator-jenkins'
+            ) {
               container('selenium') {
                   try {
                       sh 'pytest /app --verbose --junit-xml reports/tests.xml'
@@ -109,6 +121,7 @@ def cicd(build) {
                       echo "http://zalenium.35.246.75.225.nip.io/dashboard/?q=build:kuber-${build}-${branch}-${BUILD_ID}"
                   }
               }
+            }
           }
       }
   }
