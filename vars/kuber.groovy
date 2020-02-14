@@ -103,7 +103,6 @@ def cicd(build) {
           stage('Functional Test') {
             def image = containers['selenium']['image']
             def tag = containers['selenium']['tag']
-            // def label = "build-jenkins-operator-${UUID.randomUUID().toString()}"
             podTemplate(
                     containers: [
                             containerTemplate(name: 'jnlp', image: 'jenkins/jnlp-slave'),
