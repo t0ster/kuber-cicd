@@ -78,7 +78,7 @@ def cicd(build, deploy = true) {
                         "repo": "https://github.com/t0ster/kuber.git",
                         "branch" : "${kuberBranch}",
                         "path": "charts/kuber-stack",
-                        "namespace": "${namespace}",
+                        "namespace": "${branch}",
                         "values": {
                             "host": "${branch}.kuber.35.246.75.225.nip.io",
                             "ui": {
