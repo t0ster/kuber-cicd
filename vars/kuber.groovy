@@ -37,7 +37,16 @@ def cicd(build, deploy = true) {
     ],
   ]
 
-  podTemplate(
+  podTemplate(yaml: """
+  apiVersion: v1
+  kind: Pod
+  spec:
+    nodeSelector:
+      preemptible: "true"
+    tolerations:
+    - key: preemptible
+      operator: "Exists"
+  """,
     containers: [
             containerTemplate(name: 'jnlp', image: 'jenkins/jnlp-slave'),
             containerTemplate(name: 'builder', image: 't0ster/build-deploy:0.0.2', command: 'cat', ttyEnabled: true, envVars: [
