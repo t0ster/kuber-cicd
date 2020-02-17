@@ -121,7 +121,16 @@ def cicd(build, deploy = true) {
     stage('Functional Test') {
       def image = containers['selenium']['image']
       def tag = containers['selenium']['tag']
-      podTemplate(
+      podTemplate(yaml: """
+      apiVersion: v1
+      kind: Pod
+      spec:
+        nodeSelector:
+          preemptible: "true"
+        tolerations:
+        - key: preemptible
+          operator: "Exists"
+      """,
               containers: [
                       containerTemplate(name: 'jnlp', image: 'jenkins/jnlp-slave'),
                       containerTemplate(name: 'selenium', alwaysPullImage: true, image: "${image}:${tag}", command: 'cat', ttyEnabled: true, envVars: [
